@@ -1,0 +1,41 @@
+public boolean insertQueueData(KfpQueue queueData, MyLog myLog) {
+		boolean rtn = false;
+		try {
+			if (queueData == null) {
+				throw new RuntimeException("Parameter queueData is null");
+			}
+			int j = queueDao.insert(queueData);
+			if (j > 0) {
+				myLog.add("Insert return " + j);
+				rtn = true;
+			} else {
+				throw new RuntimeException("Insert failed");
+			}
+		} catch (Exception e) {
+			myLog.add("Insert Exception").add(e.getMessage());
+		}
+		return rtn;
+	}
+  
+  @RequestMapping(value = "/queue-datas", method = RequestMethod.POST)
+	public MyResult<String> insertQueueData(@RequestBody KfpQueue queueData) {
+		MyResult<String> rtn = new MyResult<>();
+		MyLog myLog = new MyLog("insertQueueData");
+		try {
+			boolean isOk = queueService.insertQueueData(queueData, myLog);
+			rtn.addMessageData(StringUtils.strip(myLog.build(), "[]"));
+			myLog.add(objMapper.writeValueAsString(queueData));
+			if (isOk) {
+				rtn.reset2OK();
+				log.info(myLog.build());
+			} else {
+				rtn.reset2NG();
+				log.warn(myLog.build());
+			}
+		} catch (Exception e) {
+			rtn.addMessageData(e.getMessage());
+			rtn.reset2NG();
+			log.fatal(myLog.add(e.getMessage()).build());
+		}
+		return rtn;
+	}
